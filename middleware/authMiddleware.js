@@ -2,15 +2,20 @@ const jwt = require("jsonwebtoken");
 
 const authMiddleware = (req, res, next) => {
   try {
-    const token = req.headers.authorization;
+    const token = req.header("Authorization");
 
     if (!token) {
       return res.status(401).json({ msg: "No token, access denied" });
     }
 
-    const verified = jwt.verify(token, "secretkey");
+    // Remove "Bearer "
+    const actualToken = token.startsWith("Bearer ")
+      ? token.slice(7)
+      : token;
 
-    req.doctor = verified; // store doctor info
+    const decoded = jwt.verify(actualToken, process.env.JWT_SECRET);
+
+    req.user = decoded; // contains doctor id
 
     next();
   } catch (err) {
